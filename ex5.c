@@ -26,12 +26,8 @@ typedef struct Playlist {
 
 
 
-//function that will free all playlists
-void freePlaylists(Playlist ** playlists, int playlistCounter) {
-    for (int i = 0; i < playlistCounter; ++i) {
-        free(playlists[i]);
-    }
-}
+
+
 
 void printPlaylistsMenu() {
     printf("Please Choose:\n"); 
@@ -46,7 +42,7 @@ void printPlaylistsMenu() {
 void printSongs(Playlist ** playlists, int playlistCounter) {
     for (int song = 0; song < playlists[playlistCounter]->songsNum; ++song) {
         Song *currentSong =  playlists[playlistCounter]->songs[song];
-        printf("%d. Title: %s\n   Artists: %s\n   Released: %d\n   Streams: %d\n",
+        printf("%d. Title: %s\n   Artist: %s\n   Released: %d\n   Streams: %d\n",
             (song+1), currentSong->title, currentSong->artist,currentSong->year, currentSong->streams);
     }
 }
@@ -157,13 +153,28 @@ void deleteSong(Playlist ** playlists, int playlistCounter, int songToDelete) {
 }
 void deletePlaylist(Playlist ** playlists, int playlistToDelete, int playlistCounter) {
     playlistToDelete--;
+    // delete all songs, titles artists ect..
+    for (int j = 0; j < playlists[playlistToDelete]->songsNum; j++) {
+        free(playlists[playlistToDelete]->songs[j]->title);
+        free(playlists[playlistToDelete]->songs[j]->artist);
+        free(playlists[playlistToDelete]->songs[j]->lyrics);
+        free(playlists[playlistToDelete]->songs[j]);
+    }
+    free(playlists[playlistToDelete]->songs);
+    free(playlists[playlistToDelete]->name);
+    free(playlists[playlistToDelete]);
+
+    // now make the position of the deleted playlist to be the next location of song
     for (int i = playlistToDelete; i < playlistCounter-1; ++i) {
         playlists[i] = playlists[i+1];
     }
-    free(playlists[playlistCounter-1]);
-    printf("Playlist deleted.\n");
 }
-
+//function that will free all playlists
+void freePlaylists(Playlist **playlists, int playlistCounter) {
+    for (int i = 0; i < playlistCounter; ++i) {
+        deletePlaylist(playlists, i+1, playlistCounter);
+    }
+}
 
 //function that will return a string
 char * getString() {
@@ -174,7 +185,13 @@ char * getString() {
     }
     int currentChar = 0;
     char input;
-    scanf(" %c", &input);
+    scanf("%c", &input);
+    if (input == '\n') {
+        scanf("%c", &input);
+        str = realloc(str, sizeof(char) * (currentChar + 2));
+        str[currentChar] = input;
+    }
+
     while (input != '\n') {
         //+2 because we also need \0
         str = realloc(str, sizeof(char) * (currentChar + 2));
@@ -226,7 +243,7 @@ int main() {
               if (chosenPlaylist == playlistCounter)
                   break;
             //print menu for playlist
-            printf("Playlist %s\n", playlists[chosenPlaylist]->name);
+            printf("playlist %s\n:", playlists[chosenPlaylist]->name);
             //loop for playlists options
             while (1) {
                 int chosenAction;
@@ -260,6 +277,7 @@ int main() {
                                 break;
                             //update streams
                             playlists[chosenPlaylist]->songs[chosenSong-1]->streams++;
+                            printf("Now playing %s:\n", playlists[chosenPlaylist]->songs[chosenSong-1]->title);
                             printf("$ %s $\n", playlists[chosenPlaylist]->songs[chosenSong-1]->lyrics);
                         }
                         break;
@@ -274,14 +292,14 @@ int main() {
                         inputSong->title = getString();
                         printf("Artist:\n");
                         inputSong->artist = getString();
-                        printf("Year:\n");
+                        printf("Year of release:\n");
                         scanf("%d", &inputSong->year);
                         printf("Lyrics:\n");
                         inputSong->lyrics = getString();
                         inputSong->streams = 0;
                         //make songs conntain another song
                         playlists[chosenPlaylist]->songs = realloc(playlists[chosenPlaylist]->songs,
-                            playlists[chosenPlaylist]->songsNum * sizeof(Song*));
+                            playlists[chosenPlaylist]->songsNum+1 * sizeof(Song*));
                         //set song to inputSong
                         playlists[chosenPlaylist]->songs[playlists[chosenPlaylist]->songsNum] = inputSong;
                         //add one to total songs
@@ -341,10 +359,11 @@ int main() {
               int deletePlaylistNumber;
               scanf("%d", &deletePlaylistNumber);
 
-              if (deletePlaylistNumber-1 > playlistCounter)
+              if (deletePlaylistNumber-1 > playlistCounter || playlistCounter == 0)
                   break;
               deletePlaylist(playlists, deletePlaylistNumber, playlistCounter);
               playlistCounter--;
+              printf("Playlist deleted.\n");
               break;
           }
 
