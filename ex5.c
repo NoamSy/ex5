@@ -30,8 +30,8 @@ typedef struct Playlist {
 
 
 void printPlaylistsMenu() {
-    printf("Please Choose:\n"); 
-    printf("\t1. Watch playlists\n\t2. Add playlist\n\t3. Remove playlist\n\t4. exit\n");   
+    printf("Please Choose:\n");
+    printf("\t1. Watch playlists\n\t2. Add playlist\n\t3. Remove playlist\n\t4. exit\n");
 }
 
 
@@ -70,7 +70,7 @@ void printSortOptions() {
 
 void sortPlaylists(Playlist ** playlists, int chosenPlaylist) {
     int chosenSort;
-    scanf("%d", &chosenSort);
+    scanf(" %d", &chosenSort);
     if (playlists[chosenPlaylist]->songsNum == 1) {}
     //alphabetical arangement
     if (chosenSort < 1 || chosenSort >= 4) {
@@ -186,15 +186,18 @@ char * getString() {
     int currentChar = 0;
     char input;
     scanf("%c", &input);
-    if (input == '\n') {
-        scanf("%c", &input);
-        str = realloc(str, sizeof(char) * (currentChar + 2));
-        str[currentChar] = input;
+        if (input == '\n') {
+            scanf("%c", &input);
+            str = realloc(str, sizeof(char) * (currentChar + 2));
+            if (str == NULL)
+                exit(1);
+            str[currentChar] = input;
     }
 
     while (input != '\n') {
         //+2 because we also need \0
         str = realloc(str, sizeof(char) * (currentChar + 2));
+
         if (str == NULL) {
             exit(1);
         }
@@ -231,7 +234,7 @@ int main() {
             int chosenPlaylist;
               //check valid input
             do {
-                scanf("%d", &chosenPlaylist);
+                scanf(" %d", &chosenPlaylist);
                 if ((chosenPlaylist-1) <= playlistCounter)
                     break;
                 printf("Invalid option\n");
@@ -243,13 +246,13 @@ int main() {
               if (chosenPlaylist == playlistCounter)
                   break;
             //print menu for playlist
-            printf("playlist %s\n:", playlists[chosenPlaylist]->name);
+            printf("playlist %s:\n", playlists[chosenPlaylist]->name);
             //loop for playlists options
             while (1) {
                 int chosenAction;
                 printPlaylistOptions();
                 do {
-                    scanf("%d", &chosenAction);
+                    scanf(" %d", &chosenAction);
                     //if we have invalid reprint menu
                     if (chosenAction > AMOUNT_OF_OPTIONS_PLAYLISTS) {
                         printf("Invalid option\n");
@@ -271,7 +274,7 @@ int main() {
                         while (1) {
                             printf("choose a song to play, or 0 to quit:\n");
                             int chosenSong;
-                            scanf("%d", &chosenSong);
+                            scanf(" %d", &chosenSong);
                             //print chosen song and check if its valid song
                             if (chosenSong == 0 || playlists[chosenPlaylist]->songsNum < (chosenSong-1))
                                 break;
@@ -293,13 +296,15 @@ int main() {
                         printf("Artist:\n");
                         inputSong->artist = getString();
                         printf("Year of release:\n");
-                        scanf("%d", &inputSong->year);
+                        scanf(" %d", &inputSong->year);
                         printf("Lyrics:\n");
                         inputSong->lyrics = getString();
                         inputSong->streams = 0;
                         //make songs conntain another song
                         playlists[chosenPlaylist]->songs = realloc(playlists[chosenPlaylist]->songs,
                             playlists[chosenPlaylist]->songsNum+1 * sizeof(Song*));
+                        if (playlists[chosenPlaylist]->songs == NULL)
+                            exit(1);
                         //set song to inputSong
                         playlists[chosenPlaylist]->songs[playlists[chosenPlaylist]->songsNum] = inputSong;
                         //add one to total songs
@@ -311,7 +316,7 @@ int main() {
                         printSongs(playlists, chosenPlaylist);
                         printf("Choose a song to delete, or 0 to quit:\n");
                         int chosenSongToDelete;
-                        scanf("%d", &chosenSongToDelete);
+                        scanf(" %d", &chosenSongToDelete);
                         deleteSong(playlists, chosenPlaylist, chosenSongToDelete);
                         break;
                     }
@@ -342,10 +347,13 @@ int main() {
                 printf("Enter playlist's name:\n");
                 char* name = NULL;
                 playlists =  realloc(playlists, sizeof(Playlist*) * (playlistCounter + 1));
+
                 if (playlists == NULL) {
                     exit(1);
                 }
                 playlists[playlistCounter] = malloc(sizeof(Playlist));
+                if (playlists[playlistCounter] == NULL)
+                    exit(1);
                 name = getString();
                 playlists[playlistCounter]->name = name;
                 playlists[playlistCounter]->songsNum = 0;
@@ -357,7 +365,7 @@ int main() {
           case DELETE_PLAYLIST: {
               printPlaylists(playlists, playlistCounter);
               int deletePlaylistNumber;
-              scanf("%d", &deletePlaylistNumber);
+              scanf(" %d", &deletePlaylistNumber);
 
               if (deletePlaylistNumber-1 > playlistCounter || playlistCounter == 0)
                   break;
